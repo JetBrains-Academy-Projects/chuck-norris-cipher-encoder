@@ -7,9 +7,28 @@ public class Main {
         System.out.println("Input string:");
         String input = scanner.nextLine();
 
-        System.out.println("The result:");
-        for(int i = 0; i < input.length(); i++){
-            System.out.println(input.charAt(i) + " = " + String.format("%07d", Integer.parseInt(Integer.toBinaryString(input.charAt(i)))));
+        StringBuilder sbBinary = new StringBuilder();
+        StringBuilder result = new StringBuilder();
+
+        for (char ch : input.toCharArray()) {
+            sbBinary.append(String.format("%7s", Integer.toBinaryString(ch)).replace(" ", "0"));
         }
+
+        char flag = '.';
+        for (char ch : sbBinary.toString().toCharArray()) {
+            if (ch != flag) {
+                flag = ch;
+                result.append(" ");
+                switch (ch) {
+                    case '1' -> result.append("0");
+                    case '0' -> result.append("00");
+                }
+                result.append(" ");
+            }
+            result.append("0");
+        }
+
+        System.out.println("The result:");
+        System.out.println(result.toString().trim());
     }
 }
