@@ -1,89 +1,119 @@
+import java.io.IOException;
 import java.util.Scanner;
 
 public class Main {
-    private static boolean checkContainOnlyZeros(String inputString){
-        for (int i = 0; i < inputString.length(); i++) {
-            return inputString.matches("^[0]+$");
+    static public String encode(String input){
+        StringBuilder binaries = new StringBuilder();
+
+        for(char c: input.toCharArray()){
+            binaries.append(String.format("%7s", Integer.toBinaryString(c)).replace(" ", "0"));
         }
-        return false;
+
+        // converting the binary chunks to encodings
+        StringBuilder output = new StringBuilder();
+        char flag = '.';
+        for(char c: binaries.toString().toCharArray()){
+            if(c != flag){
+                flag = c;
+                output.append(" ");
+
+                switch (c){
+                    case '1' -> output.append("0");
+                    case '0' -> output.append("00");
+                }
+                output.append(" ");
+            }
+            output.append("0");
+        }
+
+        return output.toString().trim();
+    }
+
+    static public String decode(String input){
+        try {
+            // validation no. 1: The encoded message includes characters other than 0 or spaces
+            for(char c: input.toCharArray()){
+                if(c != '0' && c != ' '){
+                    throw new IOException("Encoded string is not valid.");
+                }
+            }
+
+            String[] inputs = input.split(" ");
+
+            // validation no. 3: The number of blocks is odd
+            if(inputs.length % 2 != 0){
+                throw new IOException("Encoded string is not valid.");
+            }
+
+            // convert the decoded items to binary first
+            StringBuilder inputBinary = new StringBuilder();
+            for(int i = 0; i<inputs.length; i+=2){
+
+                // validation no. 2: The first block of each sequence is not 0 or 00
+                if(!inputs[i].equals("0") && !inputs[i].equals("00")){
+                    throw new IOException("Encoded string is not valid.");
+                }
+
+                switch (inputs[i]) {
+                    case "0" -> inputBinary.append("1".repeat(inputs[i + 1].length()));
+                    case "00" -> inputBinary.append("0".repeat(inputs[i + 1].length()));
+                }
+            }
+
+            // validation no. 4: The length of the decoded binary string is not a multiple of 7
+            if(inputBinary.length() % 7 != 0){
+                throw new IOException("Encoded string is not valid.");
+            }
+
+            // splitting the array into equal chunks of length 7
+            String[] binaryChars = inputBinary.toString().split("(?<=\\G.{7})");
+
+            // converting the binary strings ino ASCII characters
+            StringBuilder output = new StringBuilder();
+            for(String i: binaryChars){
+                i = Integer.toString(Integer.parseInt(i)); // removing extra zeros in case of 6 digit binary string
+                output.append((char) Integer.parseInt(i,2));
+            }
+
+            return output.toString();
+        } catch(Exception e) {
+            System.out.println(e.getMessage() + "\n");
+            return "";
+        }
     }
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
-        System.out.println("Input encoded string:");
-        String input = scanner.nextLine();
-        int n = 2;
+        boolean running = true;
+        while(running){
+            System.out.println("Please input operation (encode/decode/exit):");
+            String input = scanner.nextLine();
+            String output;
 
-        String[] tmpSubStrings = input.split(" ");
-
-        final int newArrLength = tmpSubStrings.length / n;
-
-        // 3° check not valid encoded messages
-        if (tmpSubStrings.length % n != 0) {
-            System.out.print("Encoded string is not valid.");
-            return;
-        }
-
-        String[] subStrings = new String[newArrLength];
-
-        boolean isZeros = false;
-        boolean isContainingOnlyZeros = false;
-
-        for (int i = 0; i < tmpSubStrings.length; i++) {
-
-            // 1° check not valid encoded messages
-            isContainingOnlyZeros = checkContainOnlyZeros(tmpSubStrings[i]);
-            if (!isContainingOnlyZeros) {
-                System.out.print("Encoded string is not valid.");
-                return;
+            switch (input) {
+                case "encode" -> {
+                    System.out.println("Input string:");
+                    input = scanner.nextLine();
+                    output = encode(input);
+                    System.out.println("Encoded string:");
+                    System.out.println(output + "\n");
+                }
+                case "decode" -> {
+                    System.out.println("Input encoded string:");
+                    input = scanner.nextLine();
+                    output = decode(input);
+                    if (!output.equals("")) {
+                        System.out.println("Decoded string:");
+                        System.out.println(output + "\n");
+                    }
+                }
+                case "exit" -> {
+                    System.out.println("Bye!" + "\n");
+                    running = false;
+                }
+                default -> System.out.println("There is no '" + input + "' operation" + "\n");
             }
-
-            if (i % n == 0) {
-
-                // 2° check not valid encoded messages
-                if (!tmpSubStrings[i].equals("00") && !tmpSubStrings[i].equals("0")) {
-                    System.out.print("Encoded string is not valid.");
-                    return;
-                }
-
-                if (tmpSubStrings[i].equals("00")) {
-                    isZeros = true;
-                } else {
-                    isZeros = false;
-                }
-
-
-            } else {
-                if (isZeros){
-                    subStrings[i/n] = tmpSubStrings[i];
-                } else {
-                    subStrings[i/n] = tmpSubStrings[i].replaceAll("0", "1");
-                }
-            }
-
-
-        }
-
-        String strBinaryDigit = "";
-        for (String substring : subStrings) {
-            strBinaryDigit += substring;
-        }
-
-        // 4° check not valid encoded messages
-        if (strBinaryDigit.length() % 7 != 0) {
-            System.out.print("Encoded string is not valid.");
-            return;
-        }
-
-        String[] binaryDigits = strBinaryDigit.split("(?<=\\G.{" + 7 + "})");
-
-        System.out.println("Decoded string:");
-        int decimalValue = 0;
-        for (String binaryDigit : binaryDigits) {
-            decimalValue = Integer.parseInt(binaryDigit,2);
-            char character = (char) decimalValue;
-            System.out.print(character);
         }
     }
 }
